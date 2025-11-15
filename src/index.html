@@ -1,32 +1,275 @@
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <link rel="stylesheet" href="styles.css" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>PakePlus App</title>
-        <script type="module" src="/main.js" defer></script>
-    </head>
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>像素射手</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: "Microsoft YaHei", sans-serif;
+      color: #fff;
+      overflow: hidden;
+    }
+    .game-container {
+      position: relative;
+      width: 800px;
+      height: 600px;
+      margin: 0 auto;
+    }
+    #gameCanvas {
+      display: block;
+      width: 800px;
+      height: 600px;
+    }
+    .game-info {
+      width: 800px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      padding: 10px;
+      font-size: 18px;
+    }
+    .info-item {
+      background: rgba(0,0,0,0.5);
+      padding: 5px 15px;
+      border-radius: 20px;
+    }
+    .menu {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      z-index: 20;
+    }
+    .menu-bg {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: url('assets/menu-bg.jpg') center/cover no-repeat;
+      filter: brightness(0.5);
+      z-index: -1;
+    }
+    .menu h1 {
+      color: #4CAF50;
+      font-size: 48px;
+      text-shadow: 0 0 10px rgba(76,175,80,0.8);
+    }
+    .mode-select {
+      display: flex;
+      gap: 20px;
+    }
+    .btn {
+      padding: 15px 40px;
+      font-size: 24px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .btn:hover {
+      background: #45a049;
+      transform: scale(1.05);
+      box-shadow: 0 0 15px rgba(76,175,80,0.8);
+    }
+    .menu p {
+      font-size: 20px;
+      color: #000;
+      background: rgba(255,255,255,0.7);
+      padding: 8px 15px;
+      border-radius: 8px;
+      max-width: 600px;
+      text-align: center;
+    }
+    .level-indicator {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.7);
+      padding: 3px 15px;
+      border-radius: 15px;
+      font-size: 16px;
+    }
+    .music-hint {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      background: rgba(0,0,0,0.5);
+      padding: 3px 10px;
+      border-radius: 10px;
+      font-size: 14px;
+    }
+    .back-menu-btn {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      padding: 5px 15px;
+      font-size: 16px;
+      z-index: 10;
+    }
+    #gameCanvas {
+      cursor: default; /* 恢复默认鼠标样式 */
+    }
+    .crosshair {
+      display: none; /* 隐藏瞄准镜 */
+    }
+    .button-group {
+      display: flex;
+      gap: 20px;
+    }
+    .confirm-dialog {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0,0,0,0.8);
+      padding: 30px;
+      border-radius: 10px;
+      text-align: center;
+      z-index: 30;
+      display: none;
+    }
+    .confirm-dialog p {
+      font-size: 22px;
+      margin-bottom: 20px;
+    }
+    .confirm-buttons {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+    }
+    .confirm-btn {
+      padding: 8px 20px;
+      font-size: 18px;
+    }
+    .confirm-btn.confirm-yes {
+      background: #ff4444;
+    }
+    .confirm-btn.confirm-yes:hover {
+      background: #cc0000;
+    }
+    .save-hint {
+      position: absolute;
+      bottom: 40px;
+      left: 10px;
+      background: rgba(0,0,0,0.5);
+      padding: 3px 10px;
+      border-radius: 10px;
+      font-size: 14px;
+      z-index: 5;
+    }
+    .bullet-trail {
+      position: absolute;
+      background-color: rgba(255, 255, 255, 0.8);
+      width: 2px;
+      transform-origin: bottom center;
+      z-index: 10;
+      pointer-events: none;
+    }
+    /* 新增：关于按钮和弹窗样式 */
+    .about-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      padding: 5px 15px;
+      font-size: 16px;
+      z-index: 10;
+    }
+    .about-dialog {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0,0,0,0.9);
+      padding: 30px;
+      border-radius: 10px;
+      text-align: center;
+      z-index: 40;
+      display: none;
+      width: 300px;
+    }
+    .about-dialog h3 {
+      color: #4CAF50;
+      margin-bottom: 20px;
+    }
+    .about-dialog p {
+      margin: 10px 0;
+      text-align: left;
+    }
+    .close-about {
+      margin-top: 20px;
+      padding: 8px 20px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="game-info">
+    <div class="info-item">得分: <span id="score">0</span></div>
+    <div class="info-item">生命值: <span id="lives">10</span></div>
+  </div>
+  
+  <div class="game-container">
+    <canvas id="gameCanvas"></canvas>
+    <div class="level-indicator">关卡: <span id="level">1</span></div>
+    <div class="music-hint">按 M 键开关音乐 | 按 Esc 键返回菜单</div>
+    <div class="save-hint">游戏进度将自动保存</div>
+    
+    <button id="inGameBackBtn" class="btn back-menu-btn">返回菜单</button>
+    <button id="aboutBtn" class="btn about-btn">关于</button> <!-- 新增关于按钮 -->
+    
+    <div id="confirmDialog" class="confirm-dialog">
+      <p>是否退出游戏？进度将自动保存</p>
+      <div class="confirm-buttons">
+        <button id="confirmYes" class="btn confirm-btn confirm-yes">是</button>
+        <button id="confirmNo" class="btn confirm-btn">否</button>
+      </div>
+    </div>
+    
+    <!-- 新增关于弹窗 -->
+    <div id="aboutDialog" class="about-dialog">
+      <h3>关于游戏</h3>
+      <p>开发者：周家弘</p>
+      <p>电话：18281970402</p>
+      <p>意见反馈邮箱：zjhwyq123456@qq.com</p>
+      <button id="closeAbout" class="btn close-about">关闭</button>
+    </div>
+    
+    <div id="startMenu" class="menu">
+      <div class="menu-bg"></div>
+      <h1>像素射手</h1>
+      <p>新手模式：使用 ← → 键移动，空格键射击<br>进阶模式：鼠标点击敌人直接射击</p>
+      <div class="mode-select">
+        <button id="noviceBtn" class="btn">新手模式</button>
+        <button id="advancedBtn" class="btn">进阶模式</button>
+      </div>
+    </div>
+    
+    <div id="endMenu" class="menu" style="display: none;">
+      <div class="menu-bg"></div>
+      <h1>游戏结束</h1>
+      <p>最终得分: <span id="finalScore">0</span></p>
+      <p>通关关卡: <span id="finalLevel">1</span></p>
+      <div class="button-group">
+        <button id="restartBtn" class="btn">再来一局</button>
+        <button id="backToMenuBtn" class="btn">返回主菜单</button>
+      </div>
+    </div>
+    
+    <!-- 瞄准镜图片（已隐藏） -->
+    <img id="crosshair" class="crosshair" src="assets/crosshair.png" style="width: 50px; height: 50px;">
+    <div id="bulletTrails"></div>
+  </div>
 
-    <body>
-        <main class="container">
-            <h1>Welcome to PakePlus</h1>
-            <form class="row" id="greet-form">
-                <input id="inputValue" placeholder="Enter a something..." />
-            </form>
-            <div class="resultBox">
-                <span>result: </span>
-                <span id="result"></span>
-            </div>
-            <div class="invokeBox">
-                <button id="openUrl">open_url_browser</button>
-                <button id="openUrlNew">open_url_new</button>
-                <button id="runCommand">run_command</button>
-                <button id="downloadFile">download_file</button>
-                <button id="getExeDir">get_exe_dir</button>
-                <button id="getEnvVar">get_env_var</button>
-                <button id="findPort">find_port</button>
-            </div>
-        </main>
-    </body>
+  <script src="level.js"></script>
+  <script src="game.js"></script>
+</body>
 </html>
